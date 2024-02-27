@@ -1,0 +1,124 @@
+.home-page-container {
+  width: 100%;
+  display: flex;
+  overflow: auto;
+  min-height: 100vh;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+}
+.home-page-home-page {
+  width: 100%;
+  height: 844px;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+  align-items: flex-start;
+  flex-shrink: 0;
+  border-color: rgba(0, 0, 0, 1);
+  border-style: solid;
+  border-width: 1px;
+  background-color: rgba(255, 255, 255, 1);
+}
+.home-page-rectangle1 {
+  top: 0px;
+  left: 0px;
+  width: 390px;
+  height: 746px;
+  position: absolute;
+}
+.home-page-addround {
+  top: 59px;
+  left: 336px;
+  width: 24px;
+  height: 24px;
+  position: absolute;
+}
+.home-page-bottomnav {
+  top: 776px;
+  left: 43px;
+  width: 292.413330078125px;
+  height: 38px;
+  display: flex;
+  position: absolute;
+  align-items: flex-start;
+  flex-shrink: 1;
+}
+.home-page-home {
+  top: 3px;
+  left: 0px;
+  width: 32px;
+  height: 32px;
+  position: absolute;
+}
+.home-page-mortarboardlight {
+  top: 0px;
+  left: 135px;
+  width: 38px;
+  height: 38px;
+  position: absolute;
+}
+.home-page-profile {
+  top: 10px;
+  left: 276px;
+  width: 16.413339614868164px;
+  height: 18.666667938232422px;
+  display: flex;
+  position: absolute;
+  align-items: flex-start;
+  flex-shrink: 1;
+}
+.home-page-vector {
+  top: 0px;
+  left: 3.986668586730957px;
+  width: 8px;
+  height: 8px;
+  position: absolute;
+}
+.home-page-vector1 {
+  top: 11.746658325195312px;
+  left: 0px;
+  width: 16px;
+  height: 7px;
+  position: absolute;
+}
+.home-page-screenshot20240227at9141 {
+  top: 157px;
+  left: 21px;
+  width: 348px;
+  height: 530px;
+  position: absolute;
+}
+.home-page-rectangle2 {
+  top: 53px;
+  left: 21px;
+  width: 276px;
+  height: 37px;
+  position: absolute;
+  border-color: rgba(233, 233, 233, 1);
+  border-style: solid;
+  border-width: 1px;
+  border-radius: 34px;
+}
+.home-page-search {
+  top: 59px;
+  left: 35px;
+  width: 24px;
+  height: 24px;
+  position: absolute;
+}
+.home-page-text {
+  top: 83px;
+  left: 322px;
+  color: rgba(0, 0, 0, 1);
+  height: auto;
+  position: absolute;
+  font-size: 10px;
+  font-style: Bold;
+  text-align: center;
+  font-family: Inter;
+  font-weight: 700;
+  line-height: 120.00000476837158%;
+  font-stretch: normal;
+  text-decoration: none;
+}
