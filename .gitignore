@@ -6,6 +6,9 @@ __pycache__/
 # Unit Tests
 test.py
 
+# Sensitive Information
+intelib_google_auth.json
+
 # C extensions
 *.so
 
