@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, flash, url_for
+from flask import Flask, render_template, request, redirect, flash, url_for, session
 from pymongo import MongoClient
 from flask_bcrypt import Bcrypt
 
@@ -20,6 +20,21 @@ def home():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    if request.method == "POST":
+        email = request.form.get("email")
+        password = request.form.get("password")
+        user_filter = users.find_one({"email":email})
+        try:
+            hashed_password = user_filter["password"]
+        except TypeError:
+            flash("Invalid Username or Password", "error")
+            return redirect(url_for("login"))
+        if user_filter and bcrypt.check_password_hash(hashed_password, password):
+            session["user"] = email
+            flash("Login Successful. Hi, Kevin", "success")
+            return redirect(url_for("home"))
+        flash("Invalid Username or Password", "error")
+        return redirect(url_for("login"))
     return render_template("login.html")
 
 
@@ -44,6 +59,12 @@ def register():
         
         
     return render_template("register.html")
+
+@app.route("/logout")
+def logout():
+    session.pop("user", None)
+    flash("Logged Out!", "error")
+    return redirect(url_for("login"))
 
 if __name__ == "__main__":
     app.run(debug=True)
