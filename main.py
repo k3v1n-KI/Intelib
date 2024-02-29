@@ -68,8 +68,7 @@ db = client.flask_database
 users = db.users
 books = db.books
 history = db.history
-auth_json_file = open("intelib_google_auth.json")
-google_auth_json = json.load(auth_json_file)["web"]
+
 
 
 # Base endpoint
