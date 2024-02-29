@@ -5,6 +5,7 @@ __pycache__/
 
 # Unit Tests
 test.py
+Web_Interface.py
 
 # Sensitive Information
 intelib_google_auth.json
