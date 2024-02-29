@@ -3,7 +3,6 @@ from flask_restful import Resource, Api, reqparse, abort
 from pymongo import MongoClient, ReturnDocument
 from flask_bcrypt import Bcrypt
 import json
-from datetime import datetime
 
 
 # Initilize Flask API
