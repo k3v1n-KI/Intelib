@@ -1,4 +1,4 @@
-from flask import Flask, abort
+from flask import Flask, abort, session
 from flask_restful import Resource, Api, reqparse
 from pymongo import MongoClient
 from flask_bcrypt import Bcrypt
@@ -16,7 +16,13 @@ register_args.add_argument("first_name", type=str, help="User's first name", req
 register_args.add_argument("last_name", type=str, help="User's last name", required=True)
 register_args.add_argument("email", type=str, help="User's email", required=True)
 register_args.add_argument("password", type=str, help="User's password", required=True)
-register_args.add_argument("phone_number", type=int, help="User's Phone Number", required=True)
+register_args.add_argument("phone_number", type=int, help="User's phone number", required=True)
+register_args.add_argument("about_your_job", type=str, help="User's job description")
+register_args.add_argument("about_your_family", type=str, help="User's family description")
+register_args.add_argument("about_your_neighborhood", type=str, help="User's neighborhood description")
+register_args.add_argument("about_your_hobbies", type=str, help="User's hobbies")
+register_args.add_argument("about_your_personality", type=str, help="User's personality description")
+
 
 # Arguments requires to log a user in
 login_args = reqparse.RequestParser()
@@ -92,12 +98,19 @@ class Login(Resource):
         # Return Bad request because of invalid credentials
         return abort(400)
 
-
+# Logout endpoint
+class Logout(Resource):
+    def get(self):
+        session.clear()
+        return {"user": "Logged out!"}
+    
+    
 # Endpoint URLs
 api.add_resource(HelloWorld, "/")
 api.add_resource(Register, "/register")
 api.add_resource(GetAllUsers, "/get_all_users")
 api.add_resource(GetOneUser, "/get_one_user/<email>")
+api.add_resource(Logout, "/logout")
 
 if __name__ == "__main__":
     app.run(debug=True)
