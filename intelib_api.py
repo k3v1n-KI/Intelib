@@ -57,16 +57,16 @@ class HelloWorld(Resource):
     def get(self):
         return {"Api":"Works!"}
 
-# Register user endpoint
+# Register user endpoint. Returns Registered user
 class Register(Resource):
     def post(self):
         user = register_args.parse_args()
         hashed_password = bcrypt.generate_password_hash(user["password"]).decode('utf-8')
         user["password"] = hashed_password
         users.insert_one(dict(user))
-        return user
+        return user, 201
 
-# Endpoint to get all users
+# Endpoint to get all users. Returns all users
 class GetAllUsers(Resource):
     def get(self):
         user_list = {}
@@ -78,7 +78,7 @@ class GetAllUsers(Resource):
             counter += 1
         return user_list
 
-# Endpoint to get one user
+# Endpoint to get one user. Return specific user
 class GetOneUser(Resource):
     def get(self, email):
         user = users.find_one({"email": email})
@@ -88,7 +88,7 @@ class GetOneUser(Resource):
             return user
         return abort("User email is Invalid")
 
-# Update user endpoint
+# Update user endpoint. Returns Updated User
 class UpdateUser(Resource):
     def put(self, email):
         # Columns that are nullable
@@ -110,12 +110,24 @@ class UpdateUser(Resource):
             { '$set': filtered_update_args }, 
             return_document = ReturnDocument.AFTER
             )
+        # Throw an error if email is invalid
         if user is None:
             return abort("User email is invalid")
         user = dict(user)
         del user["_id"]
         return user
     
+# Delete user endpoint. Returns deleted user
+class DeleteUser(Resource):
+    def delete(self, email):
+        user = users.find_one_and_delete({"email": email})
+        # Throws an error if user is invalid
+        if user is None:
+            return abort("User email is invalid")
+        user = dict(user)
+        del user["_id"]
+        return user
+        
     
 # Login Endpoint
 class Login(Resource):
@@ -153,6 +165,7 @@ api.add_resource(Register, "/register")
 api.add_resource(GetAllUsers, "/get_all_users")
 api.add_resource(GetOneUser, "/get_one_user/<email>")
 api.add_resource(UpdateUser, "/update_user/<email>")
+api.add_resource(DeleteUser, "/delete_user/<email>")
 api.add_resource(Login, "/login")
 api.add_resource(Logout, "/logout")
 
