@@ -2,7 +2,6 @@ from flask import Flask, session
 from flask_restful import Resource, Api, reqparse, abort
 from pymongo import MongoClient, ReturnDocument
 from flask_bcrypt import Bcrypt
-import json
 
 
 # Initilize Flask API
@@ -61,7 +60,9 @@ history_args.add_argument("source", type=dict, help="word source", required=True
 
 
 # MongoDB client
-client = MongoClient("localhost", 27017)
+connection_string = f"""mongodb+srv://intelib:intelib_api@intelib-api.hp3gykf.mongodb.net/?retryWrites=true&w=majority&appName=intelib-api"""
+
+client = MongoClient(connection_string)
 
 # DB Initilization
 db = client.flask_database
