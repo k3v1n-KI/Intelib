@@ -6,7 +6,7 @@ import json
 
 
 # Initilize Flask API
-app = Flask("REST_API")
+app = Flask(__name__)
 api = Api(app)
 bcrypt = Bcrypt(app) # Hashing algorithm for passwords
 
