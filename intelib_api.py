@@ -109,6 +109,50 @@ class Login(Resource):
         # Return Bad request because of invalid credentials
         return abort(400)
 
+# Google login URL
+@app.route("/google_auth_login")
+def google_auth_login():
+    authorization_url, state = flow.authorization_url()
+    session["state"] = state
+    # Return user credentials that will be intercepted by the callback function
+    return redirect(authorization_url)
+
+# Google login callback
+@app.route("/callback")
+def callback():
+    # Intercepts user credentials
+    flow.fetch_token(authorization_response=request.url)
+
+    if not session["state"] == request.args["state"]:
+        abort(500)  # State does not match!
+
+    # Gets ID token that will be used to access user data
+    credentials = flow.credentials
+    request_session = requests.session()
+    cached_session = cachecontrol.CacheControl(request_session)
+    token_request = google.auth.transport.requests.Request(session=cached_session)
+
+    # Verifys token for security purposes
+    id_info = id_token.verify_oauth2_token(
+        id_token=credentials._id_token,
+        request=token_request,
+        audience=GOOGLE_CLIENT_ID
+    )
+    # Add the user to session and stores their credentials in the database
+    user = users.find_one({"email":id_info.get("email")})
+    if user:
+        del user["_id"]
+    else:
+        user = {
+                "first_name": id_info.get("given_name"),
+                "last_name": id_info.get("family_name"),
+                "email": id_info.get("email"),
+                "phone_number": None,
+                "password": None
+            }
+        users.insert_one(user)
+    return dict(user)
+
 # Endpoint URLs
 api.add_resource(HelloWorld, "/")
 api.add_resource(Register, "/register")
