@@ -3,6 +3,7 @@ from flask_restful import Resource, Api, reqparse, abort
 from pymongo import MongoClient, ReturnDocument
 from flask_bcrypt import Bcrypt
 import json
+from datetime import datetime
 
 
 # Initilize Flask API
@@ -37,10 +38,28 @@ update_args.add_argument("about_your_hobbies", type=str, help="User's hobbies")
 update_args.add_argument("about_your_personality", type=str, help="User's personality description")
 
 
-# Arguments requires to log a user in
+# Arguments required to log a user in
 login_args = reqparse.RequestParser()
 login_args.add_argument("email", type=str, help="User's email", required=True)
 login_args.add_argument("password", type=str, help="User's password", required=True)
+
+# Arguments required to store books
+book_args = reqparse.RequestParser()
+book_args.add_argument("id", type=str, help="Book id", required=True)
+book_args.add_argument("title", type=str, help="Book title", required=True)
+book_args.add_argument("last_page_read", type=int, help="Last page read", required=True)
+book_args.add_argument("last_page_read_datetime", type=str, help="Last page read datetime", required=True)
+book_args.add_argument("number_of_pages", type=int, help="Number of Pages", required=True)
+
+
+# Arguments required for history
+history_args = reqparse.RequestParser()
+history_args.add_argument("id", type=str, help="History id", required=True)
+history_args.add_argument("title", type=str, help="Word history title", required=True)
+history_args.add_argument("definition", type=str, help="word definition", required=True)
+history_args.add_argument("example", type=str, help="word example", required=True)
+history_args.add_argument("source", type=dict, help="word source", required=True)
+
 
 # MongoDB client
 client = MongoClient("localhost", 27017)
@@ -48,6 +67,8 @@ client = MongoClient("localhost", 27017)
 # DB Initilization
 db = client.flask_database
 users = db.users
+books = db.books
+history = db.history
 auth_json_file = open("intelib_google_auth.json")
 google_auth_json = json.load(auth_json_file)["web"]
 
@@ -66,6 +87,14 @@ class Register(Resource):
         users.insert_one(dict(user))
         return user, 201
 
+
+# Save book in library. Returns saved book
+class SaveBoook(Resource):
+    def post(self):
+        book = book_args.parse_args()
+        books.insert_one(dict(book))
+        return book, 201
+
 # Endpoint to get all users. Returns all users
 class GetAllUsers(Resource):
     def get(self):
@@ -77,6 +106,21 @@ class GetAllUsers(Resource):
             user_list[counter] = user
             counter += 1
         return user_list
+
+# Endpoint to get all books. Returns all books
+class GetAllBooks(Resource):
+    def get(self, email=None):
+        if email is None:
+            library = {}
+            counter = 1
+            for book in books.find({}):
+                book = dict(book)
+                del book["_id"]
+                library[counter] = book
+                counter += 1
+            return library
+        else:
+            pass
 
 # Endpoint to get one user. Return specific user
 class GetOneUser(Resource):
@@ -162,6 +206,7 @@ class Logout(Resource):
 # Endpoint URLs
 api.add_resource(HelloWorld, "/")
 api.add_resource(Register, "/register")
+api.add_resource(SaveBoook, "/save_book")
 api.add_resource(GetAllUsers, "/get_all_users")
 api.add_resource(GetOneUser, "/get_one_user/<email>")
 api.add_resource(UpdateUser, "/update_user/<email>")
