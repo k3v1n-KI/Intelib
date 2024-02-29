@@ -81,6 +81,9 @@ class HelloWorld(Resource):
 class Register(Resource):
     def post(self):
         user = register_args.parse_args()
+        # Two users can't use the same email
+        if users.find_one({"email":user["email"]}):
+            return abort("User with this email already exists")
         hashed_password = bcrypt.generate_password_hash(user["password"]).decode('utf-8')
         user["password"] = hashed_password
         users.insert_one(dict(user))
