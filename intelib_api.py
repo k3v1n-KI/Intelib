@@ -1,7 +1,7 @@
 import os
 import pathlib
 import requests
-from flask import Flask, request, redirect, flash, url_for, session, abort
+from flask import Flask, request, redirect, session, abort
 from flask_restful import Resource, Api, reqparse
 from pymongo import MongoClient
 from flask_bcrypt import Bcrypt
