@@ -46,7 +46,7 @@ class HelloWorld(Resource):
 
 # Register user endpoint
 class Register(Resource):
-    def put(self):
+    def post(self):
         user = register_args.parse_args()
         hashed_password = bcrypt.generate_password_hash(user["password"]).decode('utf-8')
         user["password"] = hashed_password
