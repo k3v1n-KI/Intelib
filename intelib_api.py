@@ -1,5 +1,5 @@
-from flask import Flask, abort, session
-from flask_restful import Resource, Api, reqparse
+from flask import Flask, session
+from flask_restful import Resource, Api, reqparse, abort
 from pymongo import MongoClient, ReturnDocument
 from flask_bcrypt import Bcrypt
 import json
@@ -86,7 +86,7 @@ class GetOneUser(Resource):
             user = dict(user)
             del user["_id"]
             return user
-        return abort(404)
+        return abort("User email is Invalid")
 
 # Update user endpoint
 class UpdateUser(Resource):
@@ -110,6 +110,8 @@ class UpdateUser(Resource):
             { '$set': filtered_update_args }, 
             return_document = ReturnDocument.AFTER
             )
+        if user is None:
+            return abort("User email is invalid")
         user = dict(user)
         del user["_id"]
         return user
@@ -128,7 +130,7 @@ class Login(Resource):
         try:
             hashed_password = user["password"]
         except TypeError:
-            return abort(400)
+            return abort("Invalid Username or Password")
         
         # Match Password hash
         if user and bcrypt.check_password_hash(hashed_password, password):
@@ -136,7 +138,7 @@ class Login(Resource):
             del user["_id"]
             return user
         # Return Bad request because of invalid credentials
-        return abort(400)
+        return abort("Invalid Username or Password")
 
 # Logout endpoint
 class Logout(Resource):
