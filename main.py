@@ -2,6 +2,7 @@ from flask import Flask, session
 from flask_restful import Resource, Api, reqparse, abort
 from pymongo import MongoClient, ReturnDocument
 from flask_bcrypt import Bcrypt
+import array
 
 
 # Initilize Flask API
@@ -21,7 +22,7 @@ register_args.add_argument("about_your_family", type=str, help="User's family de
 register_args.add_argument("about_your_neighborhood", type=str, help="User's neighborhood description")
 register_args.add_argument("about_your_hobbies", type=str, help="User's hobbies")
 register_args.add_argument("about_your_personality", type=str, help="User's personality description")
-register_args.add_argument("library", type=str, help="User's library")
+register_args.add_argument("library", type=list, help="User's library")
 
 # Arguments required to update a user's profile
 update_args = reqparse.RequestParser()
@@ -97,11 +98,11 @@ class SaveBook(Resource):
         user = users.find_one({"email": email})
         library = user["library"]
         if library:
-            if book["id"] in library.keys():
+            if book["id"] in library:
                 return abort("Book already exists in user library")
-            library[book["id"]] = book["title"]
+            library.append(book["id"])
         else:
-            library = {book["id"]: book["title"]}
+            library = [book["id"]]
         user = users.find_one_and_update({"email": email}, 
                                                  {"$set": {"library": library}}, 
                                                  return_document=ReturnDocument.AFTER)
