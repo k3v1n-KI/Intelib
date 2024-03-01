@@ -1,4 +1,4 @@
-from flask import Flask, session
+from flask import Flask, request, session
 from flask_restful import Resource, Api, reqparse, abort
 from pymongo import MongoClient, ReturnDocument
 from flask_bcrypt import Bcrypt
@@ -59,6 +59,10 @@ history_args.add_argument("example", type=str, help="word example", required=Tru
 history_args.add_argument("source", type=dict, help="word source", required=True)
 
 
+# Get Book Arguments
+get_book_args = reqparse.RequestParser()
+get_book_args.add_argument("book_id_list", type=list, help="Booklist", required=True)
+
 # MongoDB client
 connection_string = f"""mongodb+srv://intelib:intelib_api@intelib-api.hp3gykf.mongodb.net/?retryWrites=true&w=majority&appName=intelib-api"""
 
@@ -110,6 +114,21 @@ class SaveBook(Resource):
         del book["id"]
         books.insert_one(book)
         return user, 201
+
+# Endpoint to get book from DB. Takes a list of books as a parameter and returns a list of books
+class GetBooks(Resource):
+    def get(self):
+        # Check if parameter is supplied 
+        if request.json is None:
+            return abort(400, message="You need to supply a list of book IDs: {'book_id_list': ['book_id1', 'book_id2']}")
+        book_id_list = request.json["book_id_list"]
+        # Check to make sure all book IDs are valid
+        for book_id in book_id_list:
+            if books.find_one({"_id": book_id}) is None:
+                return abort(400, message=f"'{book_id}' is an invalid Book ID")
+        query = {"_id": {"$in": book_id_list}}
+        books_returned = list(books.find(query))
+        return books_returned
 
 # Endpoint to get all users. Returns all users
 class GetAllUsers(Resource):
@@ -228,6 +247,7 @@ api.add_resource(GetOneUser, "/get_one_user/<email>")
 api.add_resource(UpdateUser, "/update_user/<email>")
 api.add_resource(DeleteUser, "/delete_user/<email>")
 api.add_resource(DeleteBookFromUser, "/delete_book/<book_id>/<email>")
+api.add_resource(GetBooks, "/get_books")
 api.add_resource(Login, "/login")
 api.add_resource(Logout, "/logout")
 
