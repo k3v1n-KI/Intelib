@@ -23,6 +23,7 @@ register_args.add_argument("about_your_neighborhood", type=str, help="User's nei
 register_args.add_argument("about_your_hobbies", type=str, help="User's hobbies")
 register_args.add_argument("about_your_personality", type=str, help="User's personality description")
 register_args.add_argument("library", type=list, help="User's library")
+register_args.add_argument("dictionary", type=list, help="User's dictionary")
 
 # Arguments required to update a user's profile
 update_args = reqparse.RequestParser()
@@ -103,7 +104,7 @@ class SaveBook(Resource):
         library = user["library"]
         if library:
             if book["id"] in library:
-                return abort("Book already exists in user library")
+                return abort(409, messsage="Book already exists in user library")
             library.append(book["id"])
         else:
             library = [book["id"]]
@@ -114,8 +115,27 @@ class SaveBook(Resource):
         del book["id"]
         books.insert_one(book)
         return user, 201
+    
+class AddWord(Resource):
+    def post(self, email):
+        history_arguments = history_args.parse_args()
+        user = users.find_one({"email": email})
+        dictionary = user["dictionary"]
+        if dictionary:
+            if history_arguments["id"] in dictionary:
+                return abort(409, message="word already exists in user dictionary")
+            dictionary.append(history_arguments["id"])
+        else:
+            dictionary = [history_arguments["id"]]
+        user = users.find_one_and_update({"email": email}, 
+                                                 {"$set": {"dictionary": dictionary}}, 
+                                                 return_document=ReturnDocument.AFTER)
+        history_arguments["_id"] = history_arguments["id"]
+        del history_arguments["id"]
+        history.insert_one(history_arguments)
+        return user, 201
 
-# Endpoint to get book from DB. Takes a list of books as a parameter and returns a list of books
+# Endpoint to get book from DB. Takes a list of book IDs as a parameter and returns a list of books
 class GetBooks(Resource):
     def get(self):
         # Check if parameter is supplied 
@@ -129,6 +149,21 @@ class GetBooks(Resource):
         query = {"_id": {"$in": book_id_list}}
         books_returned = list(books.find(query))
         return books_returned
+
+# Endpoint to get word from DB. Takes a list of word IDs as a parameter and returns a list of words
+class GetWords(Resource):
+    def get(self):
+        # Check if parameter is supplied 
+        if request.json is None:
+            return abort(400, message="You need to supply a list of word IDs: {'word_id_list': ['word_id1', 'word_id2']}")
+        word_id_list = request.json["word_id_list"]
+        # Check to make sure all word IDs are valid
+        for word_id in word_id_list:
+            if history.find_one({"_id": word_id}) is None:
+                return abort(400, message=f"'{word_id}' is an invalid Book ID")
+        query = {"_id": {"$in": word_id_list}}
+        words_returned = list(history.find(query))
+        return words_returned
 
 # Endpoint to get all users. Returns all users
 class GetAllUsers(Resource):
@@ -248,6 +283,8 @@ api.add_resource(UpdateUser, "/update_user/<email>")
 api.add_resource(DeleteUser, "/delete_user/<email>")
 api.add_resource(DeleteBookFromUser, "/delete_book/<book_id>/<email>")
 api.add_resource(GetBooks, "/get_books")
+api.add_resource(GetWords, "/get_words")
+api.add_resource(AddWord, "/add_word/<email>")
 api.add_resource(Login, "/login")
 api.add_resource(Logout, "/logout")
 
