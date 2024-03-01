@@ -21,6 +21,7 @@ register_args.add_argument("about_your_family", type=str, help="User's family de
 register_args.add_argument("about_your_neighborhood", type=str, help="User's neighborhood description")
 register_args.add_argument("about_your_hobbies", type=str, help="User's hobbies")
 register_args.add_argument("about_your_personality", type=str, help="User's personality description")
+register_args.add_argument("library", type=str, help="User's library")
 
 # Arguments required to update a user's profile
 update_args = reqparse.RequestParser()
@@ -45,9 +46,7 @@ login_args.add_argument("password", type=str, help="User's password", required=T
 book_args = reqparse.RequestParser()
 book_args.add_argument("id", type=str, help="Book id", required=True)
 book_args.add_argument("title", type=str, help="Book title", required=True)
-book_args.add_argument("last_page_read", type=int, help="Last page read", required=True)
-book_args.add_argument("last_page_read_datetime", type=str, help="Last page read datetime", required=True)
-book_args.add_argument("number_of_pages", type=int, help="Number of Pages", required=True)
+
 
 
 # Arguments required for history
@@ -86,16 +85,30 @@ class Register(Resource):
             return abort("User with this email already exists")
         hashed_password = bcrypt.generate_password_hash(user["password"]).decode('utf-8')
         user["password"] = hashed_password
+        user["_id"] = f"{user['first_name'].lower()}_{user['last_name'].lower()}"
         users.insert_one(dict(user))
         return user, 201
 
 
-# Save book in library. Returns saved book
-class SaveBoook(Resource):
-    def post(self):
+# Save book in user's library. Returns user with updated library
+class SaveBook(Resource):
+    def post(self, email):
         book = book_args.parse_args()
-        books.insert_one(dict(book))
-        return book, 201
+        user = users.find_one({"email": email})
+        library = user["library"]
+        if library:
+            if book["id"] in library.keys():
+                return abort("Book already exists in user library")
+            library[book["id"]] = book["title"]
+        else:
+            library = {book["id"]: book["title"]}
+        user = users.find_one_and_update({"email": email}, 
+                                                 {"$set": {"library": library}}, 
+                                                 return_document=ReturnDocument.AFTER)
+        book["_id"] = book["id"]
+        del book["id"]
+        books.insert_one(book)
+        return user, 201
 
 # Endpoint to get all users. Returns all users
 class GetAllUsers(Resource):
@@ -103,34 +116,34 @@ class GetAllUsers(Resource):
         user_list = {}
         counter = 1
         for user in users.find({}):
-            user = dict(user)
-            del user["_id"]
             user_list[counter] = user
             counter += 1
         return user_list
 
-# Endpoint to get all books. Returns all books
-class GetAllBooks(Resource):
-    def get(self, email=None):
-        if email is None:
-            library = {}
-            counter = 1
-            for book in books.find({}):
-                book = dict(book)
-                del book["_id"]
-                library[counter] = book
-                counter += 1
-            return library
-        else:
-            pass
+# Endpoint to delete a book from the user's library. Returns user with updated library
+class DeleteBookFromUser(Resource):
+    def delete(self, book_id, email):
+        # Finds and deletes book from books' document
+        book = books.find_one_and_delete({"_id": book_id})
+        user = users.find_one({"email": email})
+        # Check if parameters supplied are valid
+        if book is None:
+            return abort("Invalid book id")
+        elif user is None:
+            return abort("Invalid email")
+        library = user["library"]
+        del library[book_id]
+        user = users.find_one_and_update({"email": email}, 
+                                                 {"$set": {"library": library}}, 
+                                                 return_document=ReturnDocument.AFTER)
+        return user
+
 
 # Endpoint to get one user. Return specific user
 class GetOneUser(Resource):
     def get(self, email):
         user = users.find_one({"email": email})
         if user:
-            user = dict(user)
-            del user["_id"]
             return user
         return abort("User email is Invalid")
 
@@ -208,11 +221,12 @@ class Logout(Resource):
 # Endpoint URLs
 api.add_resource(HelloWorld, "/")
 api.add_resource(Register, "/register")
-api.add_resource(SaveBoook, "/save_book")
+api.add_resource(SaveBook, "/save_book/<email>")
 api.add_resource(GetAllUsers, "/get_all_users")
 api.add_resource(GetOneUser, "/get_one_user/<email>")
 api.add_resource(UpdateUser, "/update_user/<email>")
 api.add_resource(DeleteUser, "/delete_user/<email>")
+api.add_resource(DeleteBookFromUser, "/delete_book/<book_id>/<email>")
 api.add_resource(Login, "/login")
 api.add_resource(Logout, "/logout")
 
