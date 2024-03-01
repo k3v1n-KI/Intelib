@@ -133,7 +133,7 @@ class DeleteBookFromUser(Resource):
         elif user is None:
             return abort("Invalid email")
         library = user["library"]
-        del library[book_id]
+        library.remove(book_id)
         user = users.find_one_and_update({"email": email}, 
                                                  {"$set": {"library": library}}, 
                                                  return_document=ReturnDocument.AFTER)
